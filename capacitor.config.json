@@ -1,0 +1,16 @@
+{
+  "appId": "com.rsaconstruction.mobile",
+  "appName": "R.S.A Construction",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "allowsLinkPreview": false
+  },
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  }
+}
