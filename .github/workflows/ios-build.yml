@@ -48,6 +48,33 @@ jobs:
           name: RSA-App-Simulator-Build
           path: ios/App/build/Build/Products/Debug-iphonesimulator
 
+      - name: Build unsigned app for real device
+        run: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package as unsigned IPA
+        run: |
+          cd ios/App/build/Build/Products/Release-iphoneos
+          mkdir Payload
+          cp -r App.app Payload/
+          zip -r App.ipa Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: RSA-App-Unsigned-IPA
+          path: ios/App/build/Build/Products/Release-iphoneos/App.ipa
+
       # --- SIGNED ARCHIVE for a real device / TestFlight ---
       # Uncomment this block once you've added signing secrets (see the guide).
       # - name: Build signed archive
