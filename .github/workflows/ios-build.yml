@@ -1,0 +1,72 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Sync Capacitor iOS project
+        run: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios/App
+          pod install
+
+      # --- UNSIGNED BUILD (works with zero setup, good for a first test) ---
+      - name: Build for iOS Simulator (no signing needed)
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            build
+
+      - name: Upload simulator build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RSA-App-Simulator-Build
+          path: ios/App/build/Build/Products/Debug-iphonesimulator
+
+      # --- SIGNED ARCHIVE for a real device / TestFlight ---
+      # Uncomment this block once you've added signing secrets (see the guide).
+      # - name: Build signed archive
+      #   env:
+      #     APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      #     APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      #     APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+      #   run: |
+      #     cd ios/App
+      #     xcodebuild -workspace App.xcworkspace \
+      #       -scheme App \
+      #       -configuration Release \
+      #       -archivePath build/App.xcarchive \
+      #       archive
+      #     xcodebuild -exportArchive \
+      #       -archivePath build/App.xcarchive \
+      #       -exportPath build/ipa \
+      #       -exportOptionsPlist ExportOptions.plist
+      #
+      # - name: Upload signed IPA
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: RSA-App-IPA
+      #     path: ios/App/build/ipa/*.ipa
